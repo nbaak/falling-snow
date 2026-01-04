@@ -128,7 +128,8 @@ def main() -> None:
     # controls
     write_info(terminal, info_x, info_y+1, f"a: auto snow")
     write_info(terminal, info_x, info_y+2, f"s: place snow flake")
-    write_info(terminal, info_x, info_y+3, f"ESC: Exit")
+    write_info(terminal, info_x, info_y+3, f"m: game mode burn or pile current: [{mode}]")
+    write_info(terminal, info_x, info_y+4, f"ESC: Exit")
     
 
     with terminal.cbreak(), terminal.keypad():
@@ -149,7 +150,8 @@ def main() -> None:
                 break
 
             if key == "s":
-                fy, fx = (0, random.randint(0, width - 1))
+                # fy, fx = (0, random.randint(0, width - 1))
+                fy, fx = y, x
                 flake = Flake(random.choice(flakes), color=random.choice(colors), term=terminal)
                 write_info(terminal, info_x, info_y, f"{(fy, fx)} {flake}")
                 draw_char(terminal, fx, fy, flake)
@@ -167,6 +169,7 @@ def main() -> None:
             if key == "m":
                 if mode == "pile": mode = "burn"
                 else: mode = "pile"
+                write_info(terminal, info_x, info_y+3, f"m: game mode burn or pile current: [{mode}]")
 
             if key.name == "KEY_UP":
                 y = (y - 1) % height
