@@ -1,5 +1,7 @@
 from blessed import Terminal
 import random
+import sys
+import signal
 
 
 class Flake:
@@ -47,17 +49,23 @@ def can_fall_through(snow_static: dict, x: int, y: int) -> bool:
     return False
 
 
-def animate_snow(term: Terminal, snow: dict, snow_static: dict, height: int, x: int, y: int) -> dict:
+def animate_snow(term: Terminal, snow: dict, snow_static: dict, height: int, x: int, y: int, mode: str="pile") -> dict:
     new_snow = {}
     for (fy, fx), flake in snow.items():
         clear_char(term, fx, fy)
 
         below_pos = (fy + 1, fx)
 
-        # Check if the flake should become static
-        if fy == height - 1 or not can_fall_through(snow_static, fx, fy + 1):
+        if mode == "pile" and (fy == height - 1 or not can_fall_through(snow_static, fx, fy + 1)):
+            # Check if the flake should become static
             draw_char(term, fx, fy, flake)
             snow_static[(fy, fx)] = flake
+            
+        elif mode == "burn" and (fy == height - 1):
+            # snow will disappear after ground line
+            draw_char(term, fx, fy, flake)
+            snow_static[(fy, fx)] = flake
+            
         else:
             # remove dot if falling into it
             if below_pos in snow_static and snow_static[below_pos] == ".":
@@ -81,11 +89,11 @@ def empty_dict(term: Terminal, _dict: dict) -> dict:
 
 def main() -> None:
     terminal: Terminal = Terminal()
-    width: int = 40
-    height: int = 10
+    width: int = terminal.width
+    height: int = terminal.height // 2
 
     info_x = 1
-    info_y = height + 3
+    info_y = height + 2
 
     x: int = 0
     y: int = 0
@@ -93,7 +101,7 @@ def main() -> None:
     print(terminal.clear, end="", flush=True)
     print(terminal.move(y, x), end="", flush=True)
 
-    flakes = [".", "+", "*", "o", "@"]
+    flakes = [".", "+", "*", "o", "@", "❄"]
     colors = [
         (255, 255, 255),  # white
         (192, 192, 192),  # grey
@@ -109,12 +117,25 @@ def main() -> None:
     snow: dict = {}
     snow_static: dict = {}
     auto_snow: bool = False
+    mode = "pile"
+    
+    def exit_gracefully(signum, frame):
+        print(terminal.normal + terminal.clear + terminal.move(0, 0))
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, exit_gracefully)
+    
+    # controls
+    write_info(terminal, info_x, info_y+1, f"a: auto snow")
+    write_info(terminal, info_x, info_y+2, f"s: place snow flake")
+    write_info(terminal, info_x, info_y+3, f"ESC: Exit")
+    
 
     with terminal.cbreak(), terminal.keypad():
         while True:
             key = terminal.inkey(timeout=0.1)
             
-            snow = animate_snow(terminal, snow, snow_static, height, x, y)
+            snow = animate_snow(terminal, snow, snow_static, height, x, y, mode=mode)
 
             if auto_snow:
                 fy, fx = (0, random.randint(0, width - 1))
@@ -142,6 +163,10 @@ def main() -> None:
             if key == "c":
                 snow = empty_dict(terminal, snow)
                 snow_static = empty_dict(terminal, snow_static)
+                
+            if key == "m":
+                if mode == "pile": mode = "burn"
+                else: mode = "pile"
 
             if key.name == "KEY_UP":
                 y = (y - 1) % height
@@ -155,6 +180,8 @@ def main() -> None:
                 continue
 
             print(terminal.move(y, x), end="", flush=True)
+    
+    print(terminal.normal + terminal.clear) 
             
             
 def test():
