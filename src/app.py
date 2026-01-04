@@ -2,8 +2,31 @@ from blessed import Terminal
 import random
 
 
+class Flake:
+    def __init__(self, symbol: str, color: str = "white", term: Terminal = None):
+        self.symbol = symbol
+        self.color = color
+        self.term = term
+
+    def __str__(self):
+        if self.term:
+            r, g, b = self.color
+            return self.term.color_rgb(r, g, b) + self.symbol + self.term.normal
+        return self.symbol
+
+    def __repr__(self):
+        return self.symbol
+
+    def __eq__(self, other):
+        if isinstance(other, Flake):
+            return self.symbol == other.symbol
+        elif isinstance(other, str):
+            return self.symbol == other
+        return False
+
+
 def draw_char(term: Terminal, x: int, y: int, char: str) -> None:
-    print(term.move(y, x) + char, end="", flush=True)
+    print(term.move(y, x) + str(char), end="", flush=True)
 
 
 def clear_char(term: Terminal, x: int, y: int) -> None:
@@ -71,6 +94,18 @@ def main() -> None:
     print(terminal.move(y, x), end="", flush=True)
 
     flakes = [".", "+", "*", "o", "@"]
+    colors = [
+        (255, 255, 255),  # white
+        (192, 192, 192),  # grey
+        (211, 211, 211),  # light_grey
+        (173, 216, 230),  # light_blue
+        (0, 0, 255),      # blue
+        (0, 255, 255),    # cyan
+        (224, 255, 255),  # light_cyan
+        (106, 90, 205),   # slate_blue
+        (176, 224, 230),  # powder_blue
+        (240, 248, 255)   # alice_blue
+    ]
     snow: dict = {}
     snow_static: dict = {}
     auto_snow: bool = False
@@ -83,7 +118,7 @@ def main() -> None:
 
             if auto_snow:
                 fy, fx = (0, random.randint(0, width - 1))
-                flake = random.choice(flakes)
+                flake = Flake(random.choice(flakes), color=random.choice(colors), term=terminal)
                 snow[(fy, fx)] = flake
 
             if not key:
@@ -94,7 +129,7 @@ def main() -> None:
 
             if key == "s":
                 fy, fx = (0, random.randint(0, width - 1))
-                flake = random.choice(flakes)
+                flake = Flake(random.choice(flakes), color=random.choice(colors), term=terminal)
                 write_info(terminal, info_x, info_y, f"{(fy, fx)} {flake}")
                 draw_char(terminal, fx, fy, flake)
                 print(terminal.move(y, x), end="", flush=True)
@@ -120,6 +155,10 @@ def main() -> None:
                 continue
 
             print(terminal.move(y, x), end="", flush=True)
+            
+            
+def test():
+    print(Flake("F"))
 
 
 if __name__ == "__main__":
