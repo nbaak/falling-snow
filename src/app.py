@@ -236,6 +236,7 @@ def main() -> None:
             if key == "c":
                 snow = empty_dict(terminal, snow)
                 snow_static = empty_dict(terminal, snow_static)
+                write_info(terminal, info_x, info_y, " " * width)
                 
             if key == "m":
                 if mode == "pile": mode = "burn"
@@ -245,7 +246,6 @@ def main() -> None:
             if key == "r":
                 for i in range(10):
                     tree_colors[f"{i}"] = (random.choice(orbs), random_color())
-                    write_info(terminal, info_x, info_y, " " * width)
 
             if key.name == "KEY_UP":
                 y = (y - 1) % height
