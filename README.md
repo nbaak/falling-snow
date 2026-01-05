@@ -31,6 +31,5 @@ python falling_snow.py
 
 Snowflakes fall automatically and become static when reaching the bottom or stacking on other flakes.
 
----
-
-Do you want me to also include **a short example screenshot** instruction for clarity?
+## Inspired By
+[ysap.sh](https://github.com/bahamas10/xmas.ysap.sh)
