@@ -85,8 +85,11 @@ def empty_dict(term: Terminal, _dict: dict) -> dict:
     return new_dict
 
 
-def render_tree(term: Terminal, x: int, y: int) -> None:
-    
+def random_color() -> tuple[int,int,int]:
+    return random.randint(0,255), random.randint(0,255), random.randint(0,255)
+
+
+def render_tree(term: Terminal, x: int, y: int, tree_colors:dict) -> None:    
     tree = """
               *
              / \\
@@ -108,9 +111,15 @@ def render_tree(term: Terminal, x: int, y: int) -> None:
             /|||\\
         """
     
-    # todo: replace 0-9 with o's or random color
-    tree = "".join(term.color_rgb(*[random.randint(0, 255) for _ in range(3)]) + "o" + term.normal if c.isdigit() else c for c in tree)
-    print(term.move(y, x) + tree, end="", flush=True)
+    out = []
+    for c in tree:
+        if c in tree_colors:
+            r, g, b = tree_colors[c]
+            out.append(term.color_rgb(r, g, b) + "o" + term.normal)
+        else:
+            out.append(c)
+
+    print(term.move(y, x) + "".join(out), end="", flush=True)
     
 
 def main() -> None:
@@ -140,6 +149,7 @@ def main() -> None:
         (176, 224, 230),  # powder_blue
         (240, 248, 255)  # alice_blue
     ]
+    tree_colors = {str(i): random_color() for i in range(10)}
     snow: dict = {}
     snow_static: dict = {}
     auto_snow: bool = False
@@ -154,14 +164,15 @@ def main() -> None:
     # controls
     write_info(terminal, info_x, info_y + 1, f"a: auto snow")
     write_info(terminal, info_x, info_y + 2, f"s: place snow flake")
-    write_info(terminal, info_x, info_y + 3, f"m: game mode burn or pile current: [{mode}]")
-    write_info(terminal, info_x, info_y + 4, f"ESC: Exit")
+    write_info(terminal, info_x, info_y + 3, f"r: recolor the tree")
+    write_info(terminal, info_x, info_y + 4, f"m: game mode burn or pile current: [{mode}]")
+    write_info(terminal, info_x, info_y + 5, f"ESC: Exit")
 
     with terminal.cbreak(), terminal.keypad():
         while True:
             key = terminal.inkey(timeout=0.1)
             
-            render_tree(terminal, width // 2, height // 2 - 7)
+            render_tree(terminal, width // 2, height // 2 - 7, tree_colors=tree_colors)
             
             snow = animate_snow(terminal, snow, snow_static, height, x, y, mode=mode)
             
@@ -197,6 +208,9 @@ def main() -> None:
                 if mode == "pile": mode = "burn"
                 else: mode = "pile"
                 write_info(terminal, info_x, info_y + 3, f"m: game mode burn or pile current: [{mode}]")
+            
+            if key == "r":
+                tree_colors = {str(i): random_color() for i in range(10)}
 
             if key.name == "KEY_UP":
                 y = (y - 1) % height
