@@ -156,13 +156,15 @@ def main() -> None:
         (176, 224, 230),  # powder_blue
         (240, 248, 255)  # alice_blue
     ]
-    tree_colors = {str(i): ("o", random_color()) for i in range(10)}
+    orbs = ["o", "O", "0", "@"]
+    tree_colors = {str(i): (random.choice(orbs), random_color()) for i in range(10)}
     tree_colors["*"] = ("*", (255, 255, 51))
     tree_colors["/"] = ("/", (1, 141, 105))
     tree_colors["\\"] = ("\\", (1, 141, 105))
     tree_colors["-"] = ("-", (1, 141, 105))
     tree_colors["_"] = ("_", (1, 141, 105))
     tree_colors["|"] = ("|", (101, 67, 33))
+    
     snow: dict = {}
     snow_static: dict = {}
     auto_snow: bool = False
@@ -224,7 +226,7 @@ def main() -> None:
             
             if key == "r":
                 for i in range(10):
-                    tree_colors[f"{i}"] = ("o", random_color())
+                    tree_colors[f"{i}"] = (random.choice(orbs), random_color())
 
             if key.name == "KEY_UP":
                 y = (y - 1) % height
