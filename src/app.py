@@ -120,7 +120,8 @@ def render_tree(term: Terminal, x: int, y: int, tree_colors:dict) -> None:
     /  2        1       \\
    /---------------------\\
              |||
-             |||
+             |||~
+        ~  ~~~~~~~ ~~ ~
         """
     
     for num, (symbol, color) in tree_colors.items():
@@ -132,9 +133,10 @@ def render_tree(term: Terminal, x: int, y: int, tree_colors:dict) -> None:
 def write_controls_help(term: Terminal, x:int, y: int, mode: str) -> None:
     write_info(term, x, y + 1, f"a: auto snow")
     write_info(term, x, y + 2, f"s: place snow flake")
-    write_info(term, x, y + 3, f"r: recolor the tree")
-    write_info(term, x, y + 4, f"m: game mode burn or pile current: [{mode}]")
-    write_info(term, x, y + 5, f"ESC: Exit")
+    write_info(term, x, y + 3, f"c: clear snow")
+    write_info(term, x, y + 4, f"r: recolor the tree")
+    write_info(term, x, y + 5, f"m: game mode burn or pile current: [{mode}]")
+    write_info(term, x, y + 6, f"ESC: Exit")
     
 
 def write_line(term: Terminal, y: int, width: int, symbol: str="~") -> None:
@@ -162,12 +164,12 @@ def main() -> None:
         (192, 192, 192),  # grey
         (211, 211, 211),  # light_grey
         (173, 216, 230),  # light_blue
-        (0, 0, 255),      # blue
-        (0, 255, 255),    # cyan
+        (0, 0, 255),  # blue
+        (0, 255, 255),  # cyan
         (224, 255, 255),  # light_cyan
-        (106, 90, 205),   # slate_blue
+        (106, 90, 205),  # slate_blue
         (176, 224, 230),  # powder_blue
-        (240, 248, 255)   # alice_blue
+        (240, 248, 255)  # alice_blue
     ]
     orbs = ["o", "O", "0", "@"]
     tree_colors = {str(i): (random.choice(orbs), random_color()) for i in range(10)}
@@ -203,6 +205,10 @@ def main() -> None:
             
             snow = animate_snow(terminal, snow, snow_static, height, x, y, mode=mode)
             
+            snow_flakes_on_screen = len(snow) + len(snow_static)
+            write_info(terminal, info_x, info_y, f"current snow: {snow_flakes_on_screen}")
+            print(terminal.move(y, x), end="", flush=True)
+            
             if auto_snow:
                 fy, fx = (0, random.randint(0, width - 1))
                 flake = Flake(random.choice(flakes), color=random.choice(colors), term=terminal)
@@ -218,7 +224,7 @@ def main() -> None:
                 # fy, fx = (0, random.randint(0, width - 1))
                 fy, fx = y, x
                 flake = Flake(random.choice(flakes), color=random.choice(colors), term=terminal)
-                write_info(terminal, info_x, info_y, f"{(fy, fx)} {flake}")
+                # write_info(terminal, info_x, info_y, f"{(fy, fx)} {flake}")
                 draw_char(terminal, fx, fy, flake)
                 print(terminal.move(y, x), end="", flush=True)
                 snow[(fy, fx)] = flake
@@ -239,6 +245,7 @@ def main() -> None:
             if key == "r":
                 for i in range(10):
                     tree_colors[f"{i}"] = (random.choice(orbs), random_color())
+                    write_info(terminal, info_x, info_y, " " * width)
 
             if key.name == "KEY_UP":
                 y = (y - 1) % height
@@ -251,7 +258,7 @@ def main() -> None:
             else:
                 continue
 
-            print(terminal.move(y, x), end="", flush=True)
+            # print(terminal.move(y, x), end="", flush=True)
     
     print(terminal.normal + terminal.clear) 
             
