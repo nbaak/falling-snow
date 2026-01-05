@@ -5,7 +5,8 @@ import signal
 
 
 class Flake:
-    def __init__(self, symbol: str, color: str = "white", term: Terminal = None):
+
+    def __init__(self, symbol: str, color: str="white", term: Terminal=None):
         self.symbol = symbol
         self.color = color
         self.term = term
@@ -14,9 +15,6 @@ class Flake:
         if self.term:
             r, g, b = self.color
             return self.term.color_rgb(r, g, b) + self.symbol + self.term.normal
-        return self.symbol
-
-    def __repr__(self):
         return self.symbol
 
     def __eq__(self, other):
@@ -87,6 +85,34 @@ def empty_dict(term: Terminal, _dict: dict) -> dict:
     return new_dict
 
 
+def render_tree(term: Terminal, x: int, y: int) -> None:
+    
+    tree = """
+              *
+             / \\
+            / 0 \\
+           / 1   \\
+          /       \\
+         /_ 2  1  _\\
+          /       \\
+         /  1   2  \\
+        /           \\
+       /   0  3  0   \\
+      /_        1    _\\
+       /    2        \\
+      /  1   0   0    \\
+     /    3         3  \\
+    /  2        1       \\
+    ---------------------\\
+             |||
+            /|||\\
+        """
+    
+    # todo: replace 0-9 with o's or random color
+    tree = "".join(term.color_rgb(*[random.randint(0, 255) for _ in range(3)]) + "o" + term.normal if c.isdigit() else c for c in tree)
+    print(term.move(y, x) + tree, end="", flush=True)
+    
+
 def main() -> None:
     terminal: Terminal = Terminal()
     width: int = terminal.width
@@ -107,17 +133,17 @@ def main() -> None:
         (192, 192, 192),  # grey
         (211, 211, 211),  # light_grey
         (173, 216, 230),  # light_blue
-        (0, 0, 255),      # blue
-        (0, 255, 255),    # cyan
+        (0, 0, 255),  # blue
+        (0, 255, 255),  # cyan
         (224, 255, 255),  # light_cyan
-        (106, 90, 205),   # slate_blue
+        (106, 90, 205),  # slate_blue
         (176, 224, 230),  # powder_blue
-        (240, 248, 255)   # alice_blue
+        (240, 248, 255)  # alice_blue
     ]
     snow: dict = {}
     snow_static: dict = {}
     auto_snow: bool = False
-    mode = "pile"
+    mode = "burn"
     
     def exit_gracefully(signum, frame):
         print(terminal.normal + terminal.clear + terminal.move(0, 0))
@@ -126,18 +152,19 @@ def main() -> None:
     signal.signal(signal.SIGINT, exit_gracefully)
     
     # controls
-    write_info(terminal, info_x, info_y+1, f"a: auto snow")
-    write_info(terminal, info_x, info_y+2, f"s: place snow flake")
-    write_info(terminal, info_x, info_y+3, f"m: game mode burn or pile current: [{mode}]")
-    write_info(terminal, info_x, info_y+4, f"ESC: Exit")
-    
+    write_info(terminal, info_x, info_y + 1, f"a: auto snow")
+    write_info(terminal, info_x, info_y + 2, f"s: place snow flake")
+    write_info(terminal, info_x, info_y + 3, f"m: game mode burn or pile current: [{mode}]")
+    write_info(terminal, info_x, info_y + 4, f"ESC: Exit")
 
     with terminal.cbreak(), terminal.keypad():
         while True:
             key = terminal.inkey(timeout=0.1)
             
+            render_tree(terminal, width // 2, height // 2 - 7)
+            
             snow = animate_snow(terminal, snow, snow_static, height, x, y, mode=mode)
-
+            
             if auto_snow:
                 fy, fx = (0, random.randint(0, width - 1))
                 flake = Flake(random.choice(flakes), color=random.choice(colors), term=terminal)
@@ -169,7 +196,7 @@ def main() -> None:
             if key == "m":
                 if mode == "pile": mode = "burn"
                 else: mode = "pile"
-                write_info(terminal, info_x, info_y+3, f"m: game mode burn or pile current: [{mode}]")
+                write_info(terminal, info_x, info_y + 3, f"m: game mode burn or pile current: [{mode}]")
 
             if key.name == "KEY_UP":
                 y = (y - 1) % height
