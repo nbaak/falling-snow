@@ -85,11 +85,23 @@ def empty_dict(term: Terminal, _dict: dict) -> dict:
     return new_dict
 
 
-def random_color() -> tuple[int,int,int]:
-    return random.randint(0,255), random.randint(0,255), random.randint(0,255)
+def random_color() -> tuple[int, int, int]:
+    return random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
 
 
-def render_tree(term: Terminal, x: int, y: int, tree_colors:dict) -> None:    
+def replace_ansi(text:str, old:str, new:str) -> str:
+    import re
+    ansi_escape = re.compile(r'(\x1b\[[0-9;]*[a-zA-Z])')
+    parts = ansi_escape.split(text)
+    
+    for i, part in enumerate(parts):
+        if not ansi_escape.match(part):
+            parts[i] = part.replace(old, new)
+    
+    return ''.join(parts)
+
+
+def render_tree(term: Terminal, x: int, y: int, tree_colors:dict) -> None: 
     tree = """
               *
              / \\
@@ -106,20 +118,15 @@ def render_tree(term: Terminal, x: int, y: int, tree_colors:dict) -> None:
       /  1   0   0    \\
      /    3         3  \\
     /  2        1       \\
-    ---------------------\\
+   /---------------------\\
              |||
-            /|||\\
+             |||
         """
     
-    out = []
-    for c in tree:
-        if c in tree_colors:
-            r, g, b = tree_colors[c]
-            out.append(term.color_rgb(r, g, b) + "o" + term.normal)
-        else:
-            out.append(c)
-
-    print(term.move(y, x) + "".join(out), end="", flush=True)
+    for num, (symbol, color) in tree_colors.items():
+        tree = replace_ansi(tree, num, term.color_rgb(*color) + f"{symbol}" + term.normal) 
+    
+    print(term.move(y, x) + tree, end="", flush=True)
     
 
 def main() -> None:
@@ -149,7 +156,13 @@ def main() -> None:
         (176, 224, 230),  # powder_blue
         (240, 248, 255)  # alice_blue
     ]
-    tree_colors = {str(i): random_color() for i in range(10)}
+    tree_colors = {str(i): ("o", random_color()) for i in range(10)}
+    tree_colors["*"] = ("*", (255, 255, 51))
+    tree_colors["/"] = ("/", (1, 141, 105))
+    tree_colors["\\"] = ("\\", (1, 141, 105))
+    tree_colors["-"] = ("-", (1, 141, 105))
+    tree_colors["_"] = ("_", (1, 141, 105))
+    tree_colors["|"] = ("|", (101, 67, 33))
     snow: dict = {}
     snow_static: dict = {}
     auto_snow: bool = False
@@ -210,7 +223,8 @@ def main() -> None:
                 write_info(terminal, info_x, info_y + 3, f"m: game mode burn or pile current: [{mode}]")
             
             if key == "r":
-                tree_colors = {str(i): random_color() for i in range(10)}
+                for i in range(10):
+                    tree_colors[f"{i}"] = ("o", random_color())
 
             if key.name == "KEY_UP":
                 y = (y - 1) % height
