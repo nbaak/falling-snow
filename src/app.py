@@ -128,6 +128,19 @@ def render_tree(term: Terminal, x: int, y: int, tree_colors:dict) -> None:
     
     print(term.move(y, x) + tree, end="", flush=True)
     
+    
+def write_controls_help(term: Terminal, x:int, y: int, mode: str) -> None:
+    write_info(term, x, y + 1, f"a: auto snow")
+    write_info(term, x, y + 2, f"s: place snow flake")
+    write_info(term, x, y + 3, f"r: recolor the tree")
+    write_info(term, x, y + 4, f"m: game mode burn or pile current: [{mode}]")
+    write_info(term, x, y + 5, f"ESC: Exit")
+    
+
+def write_line(term: Terminal, y: int, width: int, symbol: str="~") -> None:
+    line = symbol * width
+    print(term.move(y, 0) + line, end="", flush=True)
+    
 
 def main() -> None:
     terminal: Terminal = Terminal()
@@ -149,12 +162,12 @@ def main() -> None:
         (192, 192, 192),  # grey
         (211, 211, 211),  # light_grey
         (173, 216, 230),  # light_blue
-        (0, 0, 255),  # blue
-        (0, 255, 255),  # cyan
+        (0, 0, 255),      # blue
+        (0, 255, 255),    # cyan
         (224, 255, 255),  # light_cyan
-        (106, 90, 205),  # slate_blue
+        (106, 90, 205),   # slate_blue
         (176, 224, 230),  # powder_blue
-        (240, 248, 255)  # alice_blue
+        (240, 248, 255)   # alice_blue
     ]
     orbs = ["o", "O", "0", "@"]
     tree_colors = {str(i): (random.choice(orbs), random_color()) for i in range(10)}
@@ -177,12 +190,12 @@ def main() -> None:
     signal.signal(signal.SIGINT, exit_gracefully)
     
     # controls
-    write_info(terminal, info_x, info_y + 1, f"a: auto snow")
-    write_info(terminal, info_x, info_y + 2, f"s: place snow flake")
-    write_info(terminal, info_x, info_y + 3, f"r: recolor the tree")
-    write_info(terminal, info_x, info_y + 4, f"m: game mode burn or pile current: [{mode}]")
-    write_info(terminal, info_x, info_y + 5, f"ESC: Exit")
-
+    write_controls_help(terminal, info_x, info_y, mode)
+    
+    
+    # line
+    write_line(terminal, height, width, "~")
+    
     with terminal.cbreak(), terminal.keypad():
         while True:
             key = terminal.inkey(timeout=0.1)
@@ -222,7 +235,7 @@ def main() -> None:
             if key == "m":
                 if mode == "pile": mode = "burn"
                 else: mode = "pile"
-                write_info(terminal, info_x, info_y + 3, f"m: game mode burn or pile current: [{mode}]")
+                write_controls_help(terminal, info_x, info_y, mode)
             
             if key == "r":
                 for i in range(10):
