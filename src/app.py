@@ -192,7 +192,6 @@ def main() -> None:
     # controls
     write_controls_help(terminal, info_x, info_y, mode)
     
-    
     # line
     write_line(terminal, height, width, "~")
     
